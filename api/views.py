@@ -24,24 +24,30 @@ def obtener_agregar_items(request):
          
         
 @csrf_exempt
-def editar_eliminar_item(request,id):
+def get_editar_eliminar_item(request,id):
+    if request.method == 'GET':
+        elemento = next((item for item in items if item["id"] == id), None)
+        if elemento:
+            return JsonResponse(elemento, safe=False, status=201)   
+        return JsonResponse({
+            "info": "producto no encontrado",
+        }, status=201)                     
     if request.method == 'PATCH':
         nombreViejo = ""
         try:
             data = json.loads(request.body)
-            for item in items:
-                if item["id"] == id:
-                    nombreViejo = item["nombre"] 
-                    item["nombre"] = data["nombre"]
-                    return JsonResponse({
-                        "id": id,
-                        "nombre viejo": nombreViejo,
-                        "nombre nuevo": item["nombre"]
-                    }, status=201)
-                else:
-                    return JsonResponse({
-                        "info": "producto no encontrado",
-                    }, status=201)
+            elemento = next((item for item in items if item["id"] == id), None)
+            if elemento:
+                nombreViejo = elemento["nombre"] 
+                elemento["nombre"] = data["nombre"]
+                return JsonResponse({
+                    "id": id,
+                    "nombre viejo": nombreViejo,
+                    "nombre nuevo": elemento["nombre"]
+                }, status=201)
+            return JsonResponse({
+                "info": "producto no encontrado",
+            }, status=201)
         except json.JSONDecodeError:
             return JsonResponse({"error": "Formato JSON inválido"}, status=400) 
     if request.method == 'DELETE':
@@ -52,9 +58,8 @@ def editar_eliminar_item(request,id):
                 return JsonResponse({
                     "ELIMINADO": elemento
                 }, status=201)
-            else:
-                return JsonResponse({
-                    "info": "producto no encontrado",
-                }, status=201)                
+            return JsonResponse({
+                "info": "producto no encontrado",
+            }, status=201)                
         except json.JSONDecodeError:
             return JsonResponse({"error": "Formato JSON inválido"}, status=400) 
